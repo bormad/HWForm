@@ -1,39 +1,18 @@
 import './App.css';
 import React from 'react';
+import { userValidation } from './validations';
 
 export const App = () => {
-	const EMAIL_REGEXP =
-		/^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
 	const [inputValue, setInputValue] = React.useState({
 		email: '',
 		password: '',
 		repeatPassword: ''
 	});
-	const [error, setError] = React.useState('Заполните все поля');
+	const [error, setError] = React.useState(true);
 	const submitButtonRef = React.useRef(null);
 
-	const validations = (key, newValue) => {
-		let newError = null;
-		if (key === 'email' && !EMAIL_REGEXP.test(newValue)) {
-			newError = 'Неверный Email';
-		} else if (key === 'password' && newValue.length < 3) {
-			newError = 'Пароль слишком короткий';
-		} else if (key === 'repeatPassword' && newValue !== inputValue.password) {
-			newError = 'Пароли не совпадают';
-		} else {
-			const fillinInAlFields = Object.values(inputValue).some(
-				value => value.length === 0
-			);
-			if (fillinInAlFields) {
-				newError = 'Заполните все поля';
-			}
-		}
-		setError(newError);
-	};
-
-	const onChangeInput = (key, newValue) => {
-		validations(key, newValue);
-		setInputValue({ ...inputValue, [key]: newValue });
+	const onChangeInput = (key, value) => {
+		setInputValue(prev => ({ ...prev, [key]: value }));
 	};
 
 	const onClickBtn = event => {
@@ -44,8 +23,21 @@ export const App = () => {
 			password: '',
 			repeatPassword: ''
 		});
-		setError('Вы не заполнили все поля');
+		setError(true);
 	};
+
+	React.useEffect(() => {
+		const validateInput = async () => {
+			try {
+				await userValidation.validate(inputValue);
+				setError(null);
+			} catch (error) {
+				setError(error.message);
+			}
+		};
+
+		validateInput();
+	}, [inputValue]);
 
 	React.useEffect(() => {
 		if (!error) {
@@ -59,7 +51,7 @@ export const App = () => {
 				<input
 					name='email'
 					value={inputValue.email}
-					onChange={event => onChangeInput('email', event.target.value)}
+					onChange={({ target }) => onChangeInput('email', target.value)}
 					className='App__input'
 					type='text'
 					placeholder='Email'
@@ -67,7 +59,7 @@ export const App = () => {
 				<input
 					name='password'
 					value={inputValue.password}
-					onChange={event => onChangeInput('password', event.target.value)}
+					onChange={({ target }) => onChangeInput('password', target.value)}
 					className='App__input'
 					type='password'
 					placeholder='Password'
@@ -75,8 +67,8 @@ export const App = () => {
 				<input
 					name='repeatPassword'
 					value={inputValue.repeatPassword}
-					onChange={event =>
-						onChangeInput('repeatPassword', event.target.value)
+					onChange={({ target }) =>
+						onChangeInput('repeatPassword', target.value)
 					}
 					className='App__input'
 					type='password'
@@ -87,7 +79,7 @@ export const App = () => {
 					ref={submitButtonRef}
 					onClick={onClickBtn}
 					type='submit'
-					disabled={error}
+					disabled={!!error}
 				>
 					Зарегистрироваться
 				</button>
