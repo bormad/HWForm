@@ -34,10 +34,6 @@ export const App = () => {
 	const onChangeInput = (key, newValue) => {
 		validations(key, newValue);
 		setInputValue({ ...inputValue, [key]: newValue });
-
-		if (key === 'repeatPassword' && newValue === inputValue.password) {
-			submitButtonRef.current.focus();
-		}
 	};
 
 	const onClickBtn = event => {
@@ -50,6 +46,13 @@ export const App = () => {
 		});
 		setError('Вы не заполнили все поля');
 	};
+
+	React.useEffect(() => {
+		if (!error) {
+			submitButtonRef.current.focus();
+		}
+	}, [error]);
+
 	return (
 		<div className='App'>
 			<form className='App__form'>
